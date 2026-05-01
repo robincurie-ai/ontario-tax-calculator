@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0f1117">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ON Tax Calc">
+<meta name="description" content="Ontario Income, Tax & Property Calculator for 2024">
+<link rel="manifest" href="#" id="manifest-link">
+<title>Ontario Income Calculator</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0f1117;color:#e8eaf0;min-height:100vh;min-height:100dvh;font-size:14px;overscroll-behavior:none}
+.app{max-width:420px;margin:0 auto;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column}
+.header{background:#1a1d2e;padding:16px;padding-top:max(16px,env(safe-area-inset-top));display:flex;align-items:center;gap:12px;border-bottom:1px solid #2a2d3e;position:sticky;top:0;z-index:100}
+.logo{width:36px;height:36px;background:linear-gradient(135deg,#4f8ef7,#7c3aed);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#fff;flex-shrink:0}
+.header h1{font-size:16px;font-weight:600;color:#e8eaf0}
+.header p{font-size:11px;color:#8b8fa8}
+.nav{display:flex;background:#1a1d2e;border-top:1px solid #2a2d3e;position:sticky;bottom:0;z-index:100;padding-bottom:max(8px,env(safe-area-inset-bottom))}
+.nav-btn{flex:1;padding:10px 4px;display:flex;flex-direction:column;align-items:center;gap:3px;border:none;background:transparent;color:#8b8fa8;font-size:9px;cursor:pointer;transition:all 0.2s;-webkit-tap-highlight-color:transparent}
+.nav-btn.active{color:#4f8ef7}
+.nav-btn svg{width:20px;height:20px}
+.content{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px;padding-bottom:8px}
+.section{background:#1a1d2e;border-radius:14px;padding:16px;margin-bottom:14px;border:1px solid #2a2d3e}
+.section-title{font-size:13px;font-weight:600;color:#8b8fa8;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:14px}
+.field{margin-bottom:12px}
+.label{font-size:12px;color:#8b8fa8;margin-bottom:4px;display:flex;justify-content:space-between;align-items:center}
+.label span{font-size:11px;color:#4f8ef7}
+input[type=number],input[type=text],select{width:100%;background:#0f1117;border:1px solid #2a2d3e;border-radius:8px;padding:9px 12px;color:#e8eaf0;font-size:16px;outline:none;-moz-appearance:textfield;-webkit-appearance:none;appearance:none}
+input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
+input:focus,select:focus{border-color:#4f8ef7}
+select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%238b8fa8' d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
+select option{background:#1a1d2e}
+.input-prefix{position:relative}
+.input-prefix::before{content:'$';position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#8b8fa8;font-size:14px;z-index:1}
+.input-prefix input{padding-left:24px}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid #2a2d3e}
+.toggle-row:last-child{border-bottom:none}
+.toggle{width:40px;height:22px;background:#2a2d3e;border-radius:11px;position:relative;cursor:pointer;transition:background 0.2s;flex-shrink:0}
+.toggle.on{background:#4f8ef7}
+.toggle::after{content:'';position:absolute;width:18px;height:18px;background:#fff;border-radius:50%;top:2px;left:2px;transition:left 0.2s}
+.toggle.on::after{left:20px}
+.summary-card{background:linear-gradient(135deg,#1e2240,#1a1d2e);border:1px solid #3a3d5e;border-radius:14px;padding:16px;margin-bottom:14px}
+.big-num{font-size:28px;font-weight:700;color:#4f8ef7}
+.big-num.green{color:#34d399}
+.big-num.red{color:#f87171}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.stat-box{background:#0f1117;border-radius:10px;padding:12px}
+.stat-label{font-size:11px;color:#8b8fa8;margin-bottom:4px}
+.stat-value{font-size:16px;font-weight:600;color:#e8eaf0}
+.stat-value.green{color:#34d399}
+.stat-value.red{color:#f87171}
+.stat-value.amber{color:#fbbf24}
+.stat-value.blue{color:#4f8ef7}
+.btn{width:100%;padding:12px;border-radius:10px;border:none;font-size:14px;font-weight:600;cursor:pointer;margin-top:8px;-webkit-tap-highlight-color:transparent}
+.btn-primary{background:linear-gradient(135deg,#4f8ef7,#7c3aed);color:#fff}
+.btn-secondary{background:#2a2d3e;color:#e8eaf0}
+.btn-danger{background:#7f1d1d;color:#fca5a5}
+.divider{height:1px;background:#2a2d3e;margin:12px 0}
+.info-row{display:flex;justify-content:space-between;padding:6px 0;font-size:13px}
+.info-row .lbl{color:#8b8fa8}
+.info-row .val{font-weight:500}
+.info-row .val.g{color:#34d399}
+.info-row .val.r{color:#f87171}
+.info-row .val.b{color:#4f8ef7}
+.info-row .val.a{color:#fbbf24}
+.accordion{border:1px solid #2a2d3e;border-radius:10px;overflow:hidden;margin-bottom:10px}
+.acc-header{padding:12px;background:#1a1d2e;display:flex;justify-content:space-between;align-items:center;cursor:pointer;font-size:13px;font-weight:500;-webkit-tap-highlight-color:transparent}
+.acc-body{padding:12px;background:#0f1117}
+.tab-bar{display:flex;gap:6px;margin-bottom:14px}
+.tab{padding:7px 14px;border-radius:8px;border:1px solid #2a2d3e;background:transparent;color:#8b8fa8;font-size:12px;cursor:pointer;white-space:nowrap;-webkit-tap-highlight-color:transparent}
+.tab.active{background:#4f8ef7;border-color:#4f8ef7;color:#fff}
+.notice{background:#1e3a5f;border:1px solid #2a2d7a;border-radius:10px;padding:12px;font-size:12px;color:#93c5fd;margin-bottom:14px;line-height:1.6}
+.rrsp-box{background:#1e3a5f;border:1px solid #2a2d7a;border-radius:8px;padding:10px;margin-top:4px}
+.empty-state{text-align:center;color:#8b8fa8;padding:40px 0;font-size:13px}
+.counter-row{display:flex;gap:8px;align-items:center}
+.counter-row input{text-align:center}
+.counter-btn{background:#2a2d3e;border:1px solid #3a3d5e;border-radius:8px;color:#e8eaf0;font-size:18px;font-weight:600;cursor:pointer;width:44px;height:44px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script>
+// Inline PWA manifest
+const manifest = {
+  name: "Ontario Income Calculator",
+  short_name: "ON Tax Calc",
+  description: "Ontario 2024 Income, Tax & Property Calculator",
+  start_url: "./",
+  display: "standalone",
+  background_color: "#0f1117",
+  theme_color: "#0f1117",
+  orientation: "portrait",
+  icons: [
+    { src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='40' fill='url(%23g)'/%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%234f8ef7'/%3E%3Cstop offset='1' stop-color='%237c3aed'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ctext x='96' y='130' font-family='Arial' font-size='110' font-weight='700' fill='white' text-anchor='middle'%3E$%3C/text%3E%3C/svg%3E", sizes: "192x192", type: "image/svg+xml", purpose: "any maskable" },
+    { src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='100' fill='url(%23g)'/%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%234f8ef7'/%3E%3Cstop offset='1' stop-color='%237c3aed'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ctext x='256' y='360' font-family='Arial' font-size='300' font-weight='700' fill='white' text-anchor='middle'%3E$%3C/text%3E%3C/svg%3E", sizes: "512x512", type: "image/svg+xml", purpose: "any maskable" }
+  ]
+};
+const blob = new Blob([JSON.stringify(manifest)], {type:'application/json'});
+document.getElementById('manifest-link').href = URL.createObjectURL(blob);
+
+// Service Worker for offline
+if('serviceWorker' in navigator){
+  const swCode = `
+    const CACHE='on-tax-calc-v1';
+    self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(['./',location.href]))));
+    self.addEventListener('fetch',e=>e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request).catch(()=>caches.match('./'))) ));
+  `;
+  const swBlob = new Blob([swCode],{type:'application/javascript'});
+  navigator.serviceWorker.register(URL.createObjectURL(swBlob)).catch(()=>{});
+}
+</script>
+
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+<script type="text/babel">
+const {useState, useEffect} = React;
+
+// ── Formatters ──────────────────────────────────────────────────────────────
+const fmt = (n, dec=0) => {
+  if (isNaN(n) || n === null || n === undefined) return '$0';
+  const val = Math.round(n * Math.pow(10, dec)) / Math.pow(10, dec);
+  return '$' + val.toLocaleString('en-CA', {minimumFractionDigits: dec, maximumFractionDigits: dec});
+};
+const pct = (n, dec=1) => {
+  if (isNaN(n) || !isFinite(n)) return '0%';
+  return (Math.round(n * 1000) / 10).toFixed(dec) + '%';
+};
+
+// ── 2024 Tax Calculations ────────────────────────────────────────────────────
+function calcFederalTax(income) {
+  const brackets = [[57375,0.15],[57375,0.205],[63895,0.26],[70390,0.29],[Infinity,0.33]];
+  let tax = 0, rem = Math.max(0, income);
+  for (const [b, r] of brackets) { const t = Math.min(rem, b); tax += t * r; rem -= t; if (rem <= 0) break; }
+  return tax;
+}
+function calcProvincialTax(income) {
+  const brackets = [[51446,0.0505],[51446,0.0915],[47107,0.1116],[70000,0.1216],[Infinity,0.1316]];
+  let tax = 0, rem = Math.max(0, income);
+  for (const [b, r] of brackets) { const t = Math.min(rem, b); tax += t * r; rem -= t; if (rem <= 0) break; }
+  return tax;
+}
+function calcOntarioSurtax(provTax) {
+  let surtax = 0;
+  if (provTax > 5556) surtax += (provTax - 5556) * 0.20;
+  if (provTax > 7108) surtax += (provTax - 7108) * 0.36;
+  return surtax;
+}
+const FED_BASIC = 15705, ON_BASIC = 11865;
+
+function calcTaxes(data) {
+  const salary    = parseFloat(data.salary)      || 0;
+  const ltd       = parseFloat(data.ltd)         || 0;
+  const cppDis    = parseFloat(data.cppDisability)|| 0;
+  const cppKids   = (parseFloat(data.cppKids)||0) * (parseInt(data.numKids)||0);
+  const cycles    = parseInt(data.payCycles)     || 26;
+
+  // LTD taxability: if employee paid premiums → non-taxable
+  const taxableLTD   = data.selfPayLTD ? 0 : ltd;
+  const taxableIncome = salary + taxableLTD;
+  const totalIncome   = salary + ltd + cppDis + cppKids;
+
+  const fedBasicCredit = FED_BASIC * 0.15;
+  const onBasicCredit  = ON_BASIC  * 0.0505;
+
+  const fedTax  = Math.max(0, calcFederalTax(taxableIncome) - fedBasicCredit);
+  const provGross = calcProvincialTax(taxableIncome);
+  const provBase  = Math.max(0, provGross - onBasicCredit);
+  const provTax   = provBase + calcOntarioSurtax(provBase);
+
+  // EI — only on employment income (CPP-D exempt)
+  const ei  = Math.min(salary * 0.0166, 1049.12);
+  // CPP — only on employment; CPP-D recipients are exempt from employee CPP on disability benefits
+  const cpp = salary > 3500 ? Math.min((salary - 3500) * 0.0595, 3867.50) : 0;
+
+  const totalTax  = fedTax + provTax + ei + cpp;
+  const netAnnual = totalIncome - totalTax;
+
+  return {
+    totalIncome, taxableIncome, taxableLTD, cppKidsTotal: cppKids,
+    fedTax, provTax, ei, cpp, totalTax, netAnnual,
+    taxPerPay:     totalTax  / cycles,
+    incomePerPay:  totalIncome / cycles,
+    netPerPay:     netAnnual  / cycles,
+    effectiveRate: taxableIncome > 0 ? totalTax / taxableIncome : 0,
+    cppDisAmt: cppDis,
+  };
+}
+
+function calcCapitalGains(p, baseIncome) {
+  const acb       = parseFloat(p.acb)        || 0;
+  const salePrice = parseFloat(p.salePrice)  || 0;
+  const realtorFee= salePrice * ((parseFloat(p.realtorPct)||0) / 100);
+  const legal     = parseFloat(p.legalFees)  || 0;
+  const propTax   = parseFloat(p.propertyTax)|| 0;
+  const totalCosts= realtorFee + legal + propTax;
+  const capitalGain  = salePrice - acb - totalCosts;
+  const taxableGain  = capitalGain * 0.5;          // 50% inclusion rate
+  const inc = Math.max(0, baseIncome);
+  const fedExtra  = Math.max(0, calcFederalTax(inc + Math.max(0,taxableGain))  - calcFederalTax(inc));
+  const provExtra = Math.max(0, calcProvincialTax(inc + Math.max(0,taxableGain)) - calcProvincialTax(inc));
+  const cgTax     = fedExtra + provExtra;
+  const netCash   = salePrice - acb - totalCosts - cgTax;
+  // RRSP needed = taxable portion (offsetting it brings taxable CG to zero)
+  const rrspNeeded= Math.max(0, taxableGain);
+  return {capitalGain, taxableGain, realtorFee, legal, propTax, totalCosts, cgTax, netCash, rrspNeeded, acb};
+}
+
+function calcRentalTax(rentalIncome, baseIncome) {
+  const ri  = parseFloat(rentalIncome) || 0;
+  const inc = Math.max(0, baseIncome);
+  const fedExtra  = Math.max(0, calcFederalTax(inc + ri)  - calcFederalTax(inc));
+  const provExtra = Math.max(0, calcProvincialTax(inc + ri) - calcProvincialTax(inc));
+  const rentalTax = fedExtra + provExtra;
+  return { rentalTax, netRental: ri - rentalTax };
+}
+
+const PROVINCES = [
+  {code:'ON',name:'Ontario'},{code:'BC',name:'British Columbia'},{code:'AB',name:'Alberta'},
+  {code:'QC',name:'Quebec'},{code:'MB',name:'Manitoba'},{code:'SK',name:'Saskatchewan'},
+  {code:'NS',name:'Nova Scotia'},{code:'NB',name:'New Brunswick'},{code:'NL',name:'Newfoundland'},
+  {code:'PE',name:'PEI'},
+];
+
+const DEFAULT = {
+  salary:'', ltd:'', selfPayLTD:false, cppDisability:'', cppKids:'', numKids:0,
+  payCycles:'26', properties:[], expenses:[],
+};
+const STORAGE_KEY = 'on_income_calc_v3';
+
+// ── Toggle Component ────────────────────────────────────────────────────────
+function Toggle({on, onClick}) {
+  return <div className={`toggle${on?' on':''}`} onClick={onClick} />;
+}
+
+// ── INCOME TAB ──────────────────────────────────────────────────────────────
+function IncomeTab({data, setData}) {
+  const r = calcTaxes(data);
+  const set = (k, v) => setData(d => ({...d, [k]: v}));
+
+  return (
+    <div>
+      <div className="notice">
+        Ontario 2024 estimates. CPP Disability and Children's Benefits are non-taxable at source.
+        EI and CPP contributions apply to employment income only. LTD taxability depends on who paid the premiums.
+      </div>
+
+      <div className="summary-card">
+        <div style={{fontSize:12,color:'#8b8fa8',marginBottom:4}}>Net Annual Income</div>
+        <div className="big-num green">{fmt(r.netAnnual)}</div>
+        <div className="grid2">
+          <div className="stat-box"><div className="stat-label">Net Per Pay Period</div><div className="stat-value green">{fmt(r.netPerPay)}</div></div>
+          <div className="stat-box"><div className="stat-label">Tax Per Pay Period</div><div className="stat-value red">{fmt(r.taxPerPay)}</div></div>
+          <div className="stat-box"><div className="stat-label">Total Annual Tax</div><div className="stat-value red">{fmt(r.totalTax)}</div></div>
+          <div className="stat-box"><div className="stat-label">Effective Rate</div><div className="stat-value amber">{pct(r.effectiveRate)}</div></div>
+        </div>
+      </div>
+
+      <div className="section">
+        <div className="section-title">Employment Income</div>
+        <div className="field">
+          <div className="label">Annual Salary / Wages</div>
+          <div className="input-prefix"><input type="number" value={data.salary} onChange={e=>set('salary',e.target.value)} placeholder="0" inputMode="decimal"/></div>
+        </div>
+        <div className="field">
+          <div className="label">Pay Frequency</div>
+          <select value={data.payCycles} onChange={e=>set('payCycles',e.target.value)}>
+            <option value="52">Weekly (52 pays/yr)</option>
+            <option value="26">Bi-weekly (26 pays/yr)</option>
+            <option value="24">Semi-monthly (24 pays/yr)</option>
+            <option value="12">Monthly (12 pays/yr)</option>
+          </select>
+        </div>
+      </div>
+
+      <div className="section">
+        <div className="section-title">LTD Benefits</div>
+        <div className="field">
+          <div className="label">Annual LTD Amount</div>
+          <div className="input-prefix"><input type="number" value={data.ltd} onChange={e=>set('ltd',e.target.value)} placeholder="0" inputMode="decimal"/></div>
+        </div>
+        <div className="toggle-row">
+          <div>
+            <div style={{fontSize:13}}>Employee-paid premiums (LTD non-taxable)</div>
+            <div style={{fontSize:11,color:'#8b8fa8',marginTop:2}}>Toggle ON if you paid the premiums yourself</div>
+          </div>
+          <Toggle on={data.selfPayLTD} onClick={()=>set('selfPayLTD',!data.selfPayLTD)}/>
+        </div>
+        {data.selfPayLTD && <div style={{fontSize:12,color:'#34d399',marginTop:8,padding:'8px',background:'#064e3b',borderRadius:8}}>✓ LTD excluded from taxable income (you paid premiums)</div>}
+        {!data.selfPayLTD && <div style={{fontSize:12,color:'#fbbf24',marginTop:8,padding:'8px',background:'#451a03',borderRadius:8}}>Employer-paid LTD is taxable income</div>}
+      </div>
+
+      <div className="section">
+        <div className="section-title">CPP Disability Benefits</div>
+        <div className="field">
+          <div className="label">CPP-D Annual Amount</div>
+          <div className="input-prefix"><input type="number" value={data.cppDisability} onChange={e=>set('cppDisability',e.target.value)} placeholder="0" inputMode="decimal"/></div>
+        </div>
+        <div className="field">
+          <div className="label">CPP Children's Benefit (per child / year)</div>
+          <div className="input-prefix"><input type="number" value={data.cppKids} onChange={e=>set('cppKids',e.target.value)} placeholder="e.g. 3054" inputMode="decimal"/></div>
+        </div>
+        <div className="field">
+          <div className="label">
+            Number of Eligible Children
+            <span>{parseInt(data.numKids)||0} × {fmt(parseFloat(data.cppKids)||0)} = {fmt((parseFloat(data.cppKids)||0)*(parseInt(data.numKids)||0))}</span>
+          </div>
+          <div className="counter-row">
+            <button className="counter-btn" onClick={()=>set('numKids',Math.max(0,(parseInt(data.numKids)||0)-1))}>−</button>
+            <input type="number" value={data.numKids} onChange={e=>set('numKids',Math.max(0,parseInt(e.target.value)||0))} inputMode="numeric"/>
+            <button className="counter-btn" onClick={()=>set('numKids',(parseInt(data.numKids)||0)+1)}>+</button>
+          </div>
+        </div>
+      </div>
+
+      <div className="section">
+        <div className="section-title">Full Tax Breakdown</div>
+        <div className="info-row"><span className="lbl">Total Income (all sources)</span><span className="val b">{fmt(r.totalIncome)}</span></div>
+        <div className="info-row"><span className="lbl">Taxable Income</span><span className="val">{fmt(r.taxableIncome)}</span></div>
+        <div className="info-row"><span className="lbl">CPP-D (non-taxable)</span><span className="val g">{fmt(r.cppDisAmt)}</span></div>
+        <div className="info-row"><span className="lbl">Children's Benefits (non-taxable)</span><span className="val g">{fmt(r.cppKidsTotal)}</span></div>
+        <div className="divider"/>
+        <div className="info-row"><span className="lbl">Federal Income Tax</span><span className="val r">{fmt(r.fedTax)}</span></div>
+        <div className="info-row"><span className="lbl">Ontario Provincial Tax</span><span className="val r">{fmt(r.provTax)}</span></div>
+        <div className="info-row"><span className="lbl">EI Premiums</span><span className="val r">{fmt(r.ei)}</span></div>
+        <div className="info-row"><span className="lbl">CPP Contributions</span><span className="val r">{fmt(r.cpp)}</span></div>
+        <div className="divider"/>
+        <div className="info-row"><span className="lbl" style={{fontWeight:600,fontSize:14}}>Total Tax Owed (Year)</span><span className="val r" style={{fontWeight:700,fontSize:14}}>{fmt(r.totalTax)}</span></div>
+        <div className="info-row"><span className="lbl" style={{fontWeight:600,fontSize:14}}>Tax to Withhold Per Pay</span><span className="val r" style={{fontWeight:700,fontSize:14}}>{fmt(r.taxPerPay)}</span></div>
+        <div className="divider"/>
+        <div className="info-row"><span className="lbl" style={{fontWeight:700,fontSize:14}}>Net Annual Take-Home</span><span className="val g" style={{fontWeight:700,fontSize:15}}>{fmt(r.netAnnual)}</span></div>
+        <div className="info-row"><span className="lbl" style={{fontWeight:700}}>Net Per Pay Period</span><span className="val g" style={{fontWeight:700}}>{fmt(r.netPerPay)}</span></div>
+      </div>
+    </div>
+  );
+}
+
+// ── PROPERTY TAB ────────────────────────────────────────────────────────────
+function PropertyTab({data, setData}) {
+  const [editing, setEditing] = useState(null);
+  const incTax = calcTaxes(data);
+  const baseIncome = incTax.taxableIncome;
+
+  const addProp = () => {
+    const p = {id:Date.now(),name:'New Property',acb:'',salePrice:'',realtorPct:'5',legalFees:'2000',propertyTax:'',rentalIncome:'',province:'ON',enabled:true,mode:'sale'};
+    setData(d => ({...d, properties:[...d.properties, p]}));
+    setEditing(p.id);
+  };
+  const upd = (id, k, v) => setData(d => ({...d, properties:d.properties.map(p => p.id===id?{...p,[k]:v}:p)}));
+  const del = (id) => { setData(d => ({...d, properties:d.properties.filter(p=>p.id!==id)})); if(editing===id) setEditing(null); };
+
+  const enabled = data.properties.filter(p=>p.enabled);
+  let totalSaleNet=0, totalCGTax=0, totalRentalNet=0;
+  enabled.forEach(p => {
+    const sp = parseFloat(p.salePrice)||0;
+    if (p.mode==='sale' && sp>0) { const r=calcCapitalGains(p,baseIncome); totalSaleNet+=r.netCash; totalCGTax+=r.cgTax; }
+    if (p.mode==='rental') { const r=calcRentalTax(p.rentalIncome,baseIncome); totalRentalNet+=r.netRental; }
+  });
+
+  return (
+    <div>
+      <div className="summary-card">
+        <div style={{fontSize:12,color:'#8b8fa8',marginBottom:8}}>Active Properties: {enabled.length} of {data.properties.length}</div>
+        <div style={{display:'flex',gap:20,flexWrap:'wrap'}}>
+          <div><div style={{fontSize:11,color:'#8b8fa8'}}>Net Sale Proceeds</div><div style={{fontSize:22,fontWeight:700,color:totalSaleNet>=0?'#34d399':'#f87171'}}>{fmt(totalSaleNet)}</div></div>
+          <div><div style={{fontSize:11,color:'#8b8fa8'}}>Capital Gains Tax</div><div style={{fontSize:22,fontWeight:700,color:'#f87171'}}>{fmt(totalCGTax)}</div></div>
+        </div>
+        {totalRentalNet > 0 && <div style={{marginTop:10}}><div style={{fontSize:11,color:'#8b8fa8'}}>Annual Rental Net</div><div style={{fontSize:22,fontWeight:700,color:'#4f8ef7'}}>{fmt(totalRentalNet)}</div></div>}
+      </div>
+
+      <button className="btn btn-primary" onClick={addProp}>+ Add Property</button>
+
+      {data.properties.length === 0 && <div className="empty-state">No properties added yet.<br/>Tap above to add one.</div>}
+
+      {data.properties.map(p => {
+        const sp  = parseFloat(p.salePrice)||0;
+        const cg  = (p.mode==='sale' && sp>0) ? calcCapitalGains(p, baseIncome) : null;
+        const rr  = (p.mode==='rental')        ? calcRentalTax(p.rentalIncome, baseIncome) : null;
+        const isOpen = editing === p.id;
+
+        return (
+          <div key={p.id} className="accordion">
+            <div className="acc-header" onClick={()=>setEditing(isOpen?null:p.id)}>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{fontWeight:600,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{p.name||'Unnamed Property'}</div>
+                <div style={{fontSize:11,color:'#8b8fa8',marginTop:2}}>
+                  {p.mode==='sale' ? `Sale: ${fmt(sp)} · Net: ${cg?fmt(cg.netCash):'—'}` : `Rental: ${fmt(parseFloat(p.rentalIncome)||0)}/yr`}
+                </div>
+              </div>
+              <div style={{display:'flex',gap:10,alignItems:'center',flexShrink:0}}>
+                <Toggle on={p.enabled} onClick={e=>{e.stopPropagation();upd(p.id,'enabled',!p.enabled);}}/>
+                <span style={{color:'#8b8fa8',fontSize:14}}>{isOpen?'▲':'▼'}</span>
+              </div>
+            </div>
+
+            {isOpen && (
+              <div className="acc-body">
+                <div className="tab-bar">
+                  <button className={`tab${p.mode==='sale'?' active':''}`} onClick={()=>upd(p.id,'mode','sale')}>Sale Analysis</button>
+                  <button className={`tab${p.mode==='rental'?' active':''}`} onClick={()=>upd(p.id,'mode','rental')}>Rental Income</button>
+                </div>
+
+                <div className="field"><div className="label">Property Name</div><input type="text" value={p.name} onChange={e=>upd(p.id,'name',e.target.value)}/></div>
+                <div className="field"><div className="label">Province of Sale / Location</div>
+                  <select value={p.province} onChange={e=>upd(p.id,'province',e.target.value)}>
+                    {PROVINCES.map(pr=><option key={pr.code} value={pr.code}>{pr.name}</option>)}
+                  </select>
+                </div>
+                <div className="field"><div className="label">ACB — Adjusted Cost Base</div><div className="input-prefix"><input type="number" value={p.acb} onChange={e=>upd(p.id,'acb',e.target.value)} placeholder="0" inputMode="decimal"/></div></div>
+
+                {p.mode==='sale' && <>
+                  <div className="field"><div className="label">Sale Price</div><div className="input-prefix"><input type="number" value={p.salePrice} onChange={e=>upd(p.id,'salePrice',e.target.value)} placeholder="0" inputMode="decimal"/></div></div>
+                  <div className="field"><div className="label">Realtor Commission (%)</div><input type="number" value={p.realtorPct} onChange={e=>upd(p.id,'realtorPct',e.target.value)} placeholder="5" inputMode="decimal"/></div>
+                  <div className="field"><div className="label">Legal Fees</div><div className="input-prefix"><input type="number" value={p.legalFees} onChange={e=>upd(p.id,'legalFees',e.target.value)} placeholder="2000" inputMode="decimal"/></div></div>
+                  <div className="field"><div className="label">Property Tax (outstanding at sale)</div><div className="input-prefix"><input type="number" value={p.propertyTax} onChange={e=>upd(p.id,'propertyTax',e.target.value)} placeholder="0" inputMode="decimal"/></div></div>
+
+                  {cg && <>
+                    <div className="divider"/>
+                    <div style={{fontSize:12,fontWeight:600,color:'#8b8fa8',marginBottom:8,letterSpacing:'0.8px'}}>SALE ANALYSIS</div>
+                    <div className="info-row"><span className="lbl">Sale Price</span><span className="val b">{fmt(sp)}</span></div>
+                    <div className="info-row"><span className="lbl">ACB</span><span className="val">{fmt(cg.acb)}</span></div>
+                    <div className="info-row"><span className="lbl">Realtor Fees ({p.realtorPct}%)</span><span className="val r">−{fmt(cg.realtorFee)}</span></div>
+                    <div className="info-row"><span className="lbl">Legal Fees</span><span className="val r">−{fmt(cg.legal)}</span></div>
+                    {cg.propTax>0&&<div className="info-row"><span className="lbl">Property Tax</span><span className="val r">−{fmt(cg.propTax)}</span></div>}
+                    <div className="divider"/>
+                    <div className="info-row"><span className="lbl">Capital Gain</span><span className={`val ${cg.capitalGain>=0?'g':'r'}`}>{fmt(cg.capitalGain)}</span></div>
+                    <div className="info-row"><span className="lbl">Taxable Gain (50% inclusion)</span><span className="val a">{fmt(cg.taxableGain)}</span></div>
+                    <div className="info-row"><span className="lbl">Capital Gains Tax</span><span className="val r">{fmt(cg.cgTax)}</span></div>
+                    <div className="divider"/>
+                    <div className="info-row"><span className="lbl" style={{fontWeight:700,fontSize:14}}>Net Cash After All Costs</span><span className={`val ${cg.netCash>=0?'g':'r'}`} style={{fontWeight:700,fontSize:14}}>{fmt(cg.netCash)}</span></div>
+                    <div className="rrsp-box" style={{marginTop:12}}>
+                      <div style={{fontSize:11,color:'#93c5fd',marginBottom:4,fontWeight:600,letterSpacing:'0.6px'}}>RRSP STRATEGY TO ELIMINATE CAPITAL GAINS TAX</div>
+                      <div style={{fontSize:13,color:'#e8eaf0',lineHeight:1.6}}>
+                        Contribute <span style={{color:'#4f8ef7',fontWeight:700,fontSize:15}}>{fmt(cg.rrspNeeded)}</span> to your RRSP to offset the taxable portion of your capital gain and potentially reduce capital gains tax to <span style={{color:'#34d399',fontWeight:700}}>$0</span>.
+                      </div>
+                    </div>
+                  </>}
+                </>}
+
+                {p.mode==='rental' && <>
+                  <div className="field"><div className="label">Annual Gross Rental Income</div><div className="input-prefix"><input type="number" value={p.rentalIncome} onChange={e=>upd(p.id,'rentalIncome',e.target.value)} placeholder="0" inputMode="decimal"/></div></div>
+                  {rr && parseFloat(p.rentalIncome)>0 && <>
+                    <div className="divider"/>
+                    <div style={{fontSize:12,fontWeight:600,color:'#8b8fa8',marginBottom:8,letterSpacing:'0.8px'}}>RENTAL TAX ANALYSIS</div>
+                    <div className="info-row"><span className="lbl">Gross Rental Income</span><span className="val b">{fmt(parseFloat(p.rentalIncome))}</span></div>
+                    <div className="info-row"><span className="lbl">Marginal Tax on Rental</span><span className="val r">−{fmt(rr.rentalTax)}</span></div>
+                    <div className="divider"/>
+                    <div className="info-row"><span className="lbl" style={{fontWeight:700,fontSize:14}}>Net Rental Income</span><span className="val g" style={{fontWeight:700,fontSize:14}}>{fmt(rr.netRental)}</span></div>
+                  </>}
+                </>}
+
+                <button className="btn btn-danger" style={{marginTop:16}} onClick={()=>del(p.id)}>Delete This Property</button>
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ── EXPENSES TAB ────────────────────────────────────────────────────────────
+function ExpensesTab({data, setData}) {
+  const [name, setName]   = useState('');
+  const [amt,  setAmt]    = useState('');
+  const [freq, setFreq]   = useState('monthly');
+
+  const incTax     = calcTaxes(data);
+  const netMonthly = incTax.netAnnual / 12;
+
+  const addExp = () => {
+    if (!name.trim() || !amt) return;
+    const a = parseFloat(amt) || 0;
+    const annualAmt = freq==='monthly' ? a*12 : freq==='weekly' ? a*52 : freq==='biweekly' ? a*26 : a;
+    setData(d => ({...d, expenses:[...d.expenses, {id:Date.now(),name:name.trim(),amount:annualAmt,freq,enabled:true}]}));
+    setName(''); setAmt('');
+  };
+  const toggleExp = id => setData(d => ({...d, expenses:d.expenses.map(e=>e.id===id?{...e,enabled:!e.enabled}:e)}));
+  const delExp    = id => setData(d => ({...d, expenses:d.expenses.filter(e=>e.id!==id)}));
+
+  const active        = data.expenses.filter(e=>e.enabled);
+  const totalAnnual   = active.reduce((s,e)=>s+e.amount, 0);
+  const totalMonthly  = totalAnnual / 12;
+  const netAfterExp   = incTax.netAnnual - totalAnnual;
+  const monthlyAfter  = netAfterExp / 12;
+
+  return (
+    <div>
+      <div className="summary-card">
+        <div style={{fontSize:12,color:'#8b8fa8',marginBottom:4}}>Monthly Net Cash Flow</div>
+        <div className="big-num" style={{color:monthlyAfter>=0?'#34d399':'#f87171'}}>{fmt(monthlyAfter)}</div>
+        <div className="grid2">
+          <div className="stat-box"><div className="stat-label">Monthly Income (net)</div><div className="stat-value green">{fmt(netMonthly)}</div></div>
+          <div className="stat-box"><div className="stat-label">Monthly Expenses</div><div className="stat-value red">{fmt(totalMonthly)}</div></div>
+          <div className="stat-box"><div className="stat-label">Annual Surplus / Deficit</div><div className="stat-value" style={{color:netAfterExp>=0?'#34d399':'#f87171'}}>{fmt(netAfterExp)}</div></div>
+          <div className="stat-box"><div className="stat-label">Expense Ratio</div><div className="stat-value amber">{pct(netMonthly>0?totalMonthly/netMonthly:0)}</div></div>
+        </div>
+      </div>
+
+      <div className="section">
+        <div className="section-title">Add Expense</div>
+        <div className="field"><div className="label">Expense Name</div><input type="text" value={name} onChange={e=>setName(e.target.value)} placeholder="e.g. Mortgage, Groceries, Car"/></div>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}>
+          <div className="field"><div className="label">Amount</div><div className="input-prefix"><input type="number" value={amt} onChange={e=>setAmt(e.target.value)} placeholder="0" inputMode="decimal"/></div></div>
+          <div className="field"><div className="label">Frequency</div>
+            <select value={freq} onChange={e=>setFreq(e.target.value)}>
+              <option value="monthly">Monthly</option>
+              <option value="weekly">Weekly</option>
+              <option value="biweekly">Bi-weekly</option>
+              <option value="annual">Annual</option>
+            </select>
+          </div>
+        </div>
+        <button className="btn btn-primary" onClick={addExp}>Add Expense</button>
+      </div>
+
+      {data.expenses.length === 0 && <div className="empty-state">No expenses added yet.<br/>Add your monthly bills above.</div>}
+
+      {data.expenses.length > 0 && (
+        <div className="section">
+          <div className="section-title">Your Expenses</div>
+          {data.expenses.map(e => (
+            <div key={e.id} style={{display:'flex',alignItems:'center',gap:10,padding:'10px 0',borderBottom:'1px solid #2a2d3e'}}>
+              <Toggle on={e.enabled} onClick={()=>toggleExp(e.id)}/>
+              <div style={{flex:1}}>
+                <div style={{fontSize:13,fontWeight:500,color:e.enabled?'#e8eaf0':'#6b7280'}}>{e.name}</div>
+                <div style={{fontSize:11,color:'#8b8fa8'}}>{fmt(e.amount/12)}/mo · {fmt(e.amount)}/yr</div>
+              </div>
+              <button onClick={()=>delExp(e.id)} style={{background:'none',border:'none',color:'#f87171',cursor:'pointer',fontSize:20,lineHeight:1,padding:'4px'}}>×</button>
+            </div>
+          ))}
+          <div className="divider"/>
+          <div className="info-row"><span className="lbl">Total Monthly Expenses</span><span className="val r">{fmt(totalMonthly)}</span></div>
+          <div className="info-row"><span className="lbl">Total Annual Expenses</span><span className="val r">{fmt(totalAnnual)}</span></div>
+          <div className="info-row" style={{marginTop:4}}><span className="lbl" style={{fontWeight:700}}>Annual Net After Expenses</span><span className="val" style={{fontWeight:700,color:netAfterExp>=0?'#34d399':'#f87171'}}>{fmt(netAfterExp)}</span></div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── SUMMARY TAB ─────────────────────────────────────────────────────────────
+function SummaryTab({data}) {
+  const incTax = calcTaxes(data);
+  const enabled = data.properties.filter(p=>p.enabled);
+  const active  = data.expenses.filter(e=>e.enabled);
+  const totalExpenses = active.reduce((s,e)=>s+e.amount, 0);
+
+  let totalSaleNet=0, totalRentalNet=0, totalCGTax=0;
+  enabled.forEach(p => {
+    const sp = parseFloat(p.salePrice)||0;
+    if (p.mode==='sale' && sp>0) { const r=calcCapitalGains(p,incTax.taxableIncome); totalSaleNet+=r.netCash; totalCGTax+=r.cgTax; }
+    if (p.mode==='rental') { const r=calcRentalTax(p.rentalIncome,incTax.taxableIncome); totalRentalNet+=r.netRental; }
+  });
+
+  const grandAnnual  = incTax.netAnnual + totalRentalNet - totalExpenses;
+  const grandMonthly = grandAnnual / 12;
+
+  return (
+    <div>
+      <div className="summary-card">
+        <div style={{fontSize:12,color:'#8b8fa8',marginBottom:4}}>Total Annual Net (Income + Rental − Expenses)</div>
+        <div className="big-num" style={{color:grandAnnual>=0?'#34d399':'#f87171'}}>{fmt(grandAnnual)}</div>
+        <div className="stat-box" style={{marginTop:12}}>
+          <div className="stat-label">Monthly Net Cash Flow</div>
+          <div className="stat-value" style={{fontSize:22,color:grandMonthly>=0?'#34d399':'#f87171'}}>{fmt(grandMonthly)}</div>
+        </div>
+      </div>
+
+      <div className="section">
+        <div className="section-title">Income Sources</div>
+        <div className="info-row"><span className="lbl">Employment / Salary</span><span className="val b">{fmt(parseFloat(data.salary)||0)}</span></div>
+        <div className="info-row"><span className="lbl">LTD Benefits</span><span className="val b">{fmt(parseFloat(data.ltd)||0)}</span></div>
+        <div className="info-row"><span className="lbl">CPP Disability</span><span className="val b">{fmt(incTax.cppDisAmt)}</span></div>
+        <div className="info-row"><span className="lbl">CPP Children's Benefits</span><span className="val b">{fmt(incTax.cppKidsTotal)}</span></div>
+        {totalRentalNet>0&&<div className="info-row"><span className="lbl">Net Rental Income</span><span className="val b">{fmt(totalRentalNet)}</span></div>}
+        <div className="divider"/>
+        <div className="info-row"><span className="lbl" style={{fontWeight:700}}>Gross Total</span><span className="val b" style={{fontWeight:700}}>{fmt(incTax.totalIncome + totalRentalNet)}</span></div>
+      </div>
+
+      <div className="section">
+        <div className="section-title">All Taxes &amp; Deductions</div>
+        <div className="info-row"><span className="lbl">Federal Income Tax</span><span className="val r">{fmt(incTax.fedTax)}</span></div>
+        <div className="info-row"><span className="lbl">Ontario Provincial Tax</span><span className="val r">{fmt(incTax.provTax)}</span></div>
+        <div className="info-row"><span className="lbl">EI Premiums</span><span className="val r">{fmt(incTax.ei)}</span></div>
+        <div className="info-row"><span className="lbl">CPP Contributions</span><span className="val r">{fmt(incTax.cpp)}</span></div>
+        {totalCGTax>0&&<div className="info-row"><span className="lbl">Capital Gains Tax</span><span className="val r">{fmt(totalCGTax)}</span></div>}
+        <div className="divider"/>
+        <div className="info-row"><span className="lbl" style={{fontWeight:700}}>Total Annual Tax Owed</span><span className="val r" style={{fontWeight:700,fontSize:14}}>{fmt(incTax.totalTax + totalCGTax)}</span></div>
+        <div className="info-row"><span className="lbl">Tax to Withhold Per Pay ({data.payCycles} periods)</span><span className="val r" style={{fontWeight:600}}>{fmt(incTax.taxPerPay)}</span></div>
+        <div className="info-row"><span className="lbl">Effective Tax Rate</span><span className="val a">{pct(incTax.effectiveRate)}</span></div>
+      </div>
+
+      {enabled.length > 0 && (
+        <div className="section">
+          <div className="section-title">Property Summary</div>
+          {enabled.map(p => {
+            const sp = parseFloat(p.salePrice)||0;
+            const cg = (p.mode==='sale'&&sp>0)?calcCapitalGains(p,incTax.taxableIncome):null;
+            const rr = (p.mode==='rental')?calcRentalTax(p.rentalIncome,incTax.taxableIncome):null;
+            return (
+              <div key={p.id} style={{marginBottom:8}}>
+                <div style={{fontSize:13,fontWeight:600,marginBottom:4,color:'#93c5fd'}}>{p.name}</div>
+                {cg&&<><div className="info-row"><span className="lbl">Capital Gain</span><span className={`val ${cg.capitalGain>=0?'g':'r'}`}>{fmt(cg.capitalGain)}</span></div><div className="info-row"><span className="lbl">Net After All Costs</span><span className={`val ${cg.netCash>=0?'g':'r'}`}>{fmt(cg.netCash)}</span></div><div className="info-row"><span className="lbl">RRSP to Eliminate CG Tax</span><span className="val a">{fmt(cg.rrspNeeded)}</span></div></>}
+                {rr&&parseFloat(p.rentalIncome)>0&&<><div className="info-row"><span className="lbl">Net Rental</span><span className="val g">{fmt(rr.netRental)}</span></div></>}
+                <div className="divider"/>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      <div className="section">
+        <div className="section-title">Expenses Summary</div>
+        <div className="info-row"><span className="lbl">Total Annual Expenses</span><span className="val r">{fmt(totalExpenses)}</span></div>
+        <div className="info-row"><span className="lbl">Total Monthly Expenses</span><span className="val r">{fmt(totalExpenses/12)}</span></div>
+      </div>
+
+      <div className="section">
+        <div className="section-title">Final Net Position</div>
+        <div className="info-row"><span className="lbl">Net Employment Income</span><span className="val g">{fmt(incTax.netAnnual)}</span></div>
+        {totalRentalNet>0&&<div className="info-row"><span className="lbl">Net Rental Income</span><span className="val g">{fmt(totalRentalNet)}</span></div>}
+        <div className="info-row"><span className="lbl">Less: Annual Expenses</span><span className="val r">−{fmt(totalExpenses)}</span></div>
+        <div className="divider"/>
+        <div className="info-row"><span className="lbl" style={{fontWeight:700,fontSize:15}}>Annual Net Cash</span><span className="val" style={{fontWeight:700,fontSize:15,color:grandAnnual>=0?'#34d399':'#f87171'}}>{fmt(grandAnnual)}</span></div>
+        <div className="info-row"><span className="lbl" style={{fontWeight:700,fontSize:15}}>Monthly Net Cash</span><span className="val" style={{fontWeight:700,fontSize:15,color:grandMonthly>=0?'#34d399':'#f87171'}}>{fmt(grandMonthly)}</span></div>
+        {totalSaleNet!==0&&<div className="info-row" style={{marginTop:4}}><span className="lbl" style={{fontWeight:600}}>+ Property Sale Proceeds</span><span className={`val ${totalSaleNet>=0?'g':'r'}`} style={{fontWeight:600}}>{fmt(totalSaleNet)}</span></div>}
+      </div>
+
+      <div style={{height:16}}/>
+    </div>
+  );
+}
+
+// ── APP ROOT ────────────────────────────────────────────────────────────────
+function App() {
+  const [tab, setTab] = useState('income');
+  const [data, setData] = useState(() => {
+    try { const s = localStorage.getItem(STORAGE_KEY); return s ? JSON.parse(s) : DEFAULT; }
+    catch { return DEFAULT; }
+  });
+
+  useEffect(() => {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch {}
+  }, [data]);
+
+  const tabs = [
+    { id:'income',   label:'Income',
+      icon:<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg> },
+    { id:'property', label:'Property',
+      icon:<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> },
+    { id:'expenses', label:'Expenses',
+      icon:<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg> },
+    { id:'summary',  label:'Summary',
+      icon:<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg> },
+  ];
+
+  return (
+    <div className="app">
+      <div className="header">
+        <div className="logo">$</div>
+        <div>
+          <h1>Ontario Income Calculator</h1>
+          <p>2024 Tax Year · Data saved locally on device</p>
+        </div>
+      </div>
+
+      <div className="content">
+        {tab==='income'   && <IncomeTab   data={data} setData={setData}/>}
+        {tab==='property' && <PropertyTab data={data} setData={setData}/>}
+        {tab==='expenses' && <ExpensesTab data={data} setData={setData}/>}
+        {tab==='summary'  && <SummaryTab  data={data}/>}
+      </div>
+
+      <div className="nav">
+        {tabs.map(t => (
+          <button key={t.id} className={`nav-btn${tab===t.id?' active':''}`} onClick={()=>setTab(t.id)}>
+            {t.icon}{t.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
